@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,28 +29,26 @@ type Response struct {
 
 // UploadFile : Upload a file to container
 func UploadFile(w http.ResponseWriter, r *http.Request) {
-	f, fh, err := r.FormFile("file")
+	fileObj, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		log.Fatal("Error uploading file")
 		respondWithError(w, http.StatusBadRequest, "Error uploading file")
 	}
-	defer f.Close()
-	fileExt := strings.Split(fh.Filename, ".")[1]
-	h := sha1.New()
-	io.Copy(h, f)
-	fname := strings.Split(fh.Filename, ".")[0] + "." + fileExt
+	defer fileObj.Close()
+	fileExt := strings.Split(fileHeader.Filename, ".")[1]
+	fname := strings.Split(fileHeader.Filename, ".")[0] + "." + fileExt
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
 	}
 	path := filepath.Join(wd, "public", "files", fname)
-	nf, err := os.Create(path)
+	newFile, err := os.Create(path)
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer nf.Close()
-	f.Seek(0, 0)
-	io.Copy(nf, f)
+	defer newFile.Close()
+	fileObj.Seek(0, 0)
+	io.Copy(newFile, fileObj)
 	respondWithJSON(w, http.StatusOK, Response{true, "File uploaded successfully"})
 }
 
