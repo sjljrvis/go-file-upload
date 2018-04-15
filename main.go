@@ -16,8 +16,9 @@ func main() {
 
 	r.HandleFunc("/file", UploadFile).Methods("POST")
 	r.HandleFunc("/file", GetFile).Methods("GET")
-
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
+	http.Handle("/", r)
+	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal(err)
 	}
 }
